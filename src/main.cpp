@@ -50,19 +50,32 @@ uint8_t queueItem = 1;
 // LED Definitions
 //#define RGB_BRIGHTNESS 10
 
-#define DATA_LED_PIN 4
-#define LABEL_LED_PIN 5
+// #define DATA_LED_PIN 4
+// #define LABEL_LED_PIN 5
 
 const int LEDsH = 8; // edit with your dimensions
 const int LEDsW = 32;
+#define LED_TYPE    WS2812B
+#define COLOR_ORDER GRB
 
-#include <Adafruit_NeoPixel.h>
-Adafruit_NeoPixel labelArray(LEDsH* LEDsW, LABEL_LED_PIN, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel dataArray(LEDsH* LEDsW, DATA_LED_PIN, NEO_GRB + NEO_KHZ800);
+// #include <Adafruit_NeoPixel.h>
+// Adafruit_NeoPixel labelArray(LEDsH* LEDsW, LABEL_LED_PIN, NEO_GRB + NEO_KHZ800);
+// Adafruit_NeoPixel dataArray(LEDsH* LEDsW, DATA_LED_PIN, NEO_GRB + NEO_KHZ800);
 
-String displayString = "hello";
+// String displayString = "hello";
 uint8_t red,green,blue = 0;
-uint32_t displayColor = dataArray.Color(10, 0, 10);
+// uint32_t displayColor = dataArray.Color(10, 0, 10);
+// #define FASTLED_ESP32_FLASH_LOCK 1
+// #define FASTLED_RMT_BUILTIN_DRIVER 1
+// #define FASTLED_RMT_SERIAL_DEBUG 1
+#define FASTLED_RMT_MAX_CHANNELS 2
+#include <FastLED.h>
+#define NUM_LEDS LEDsH * LEDsW
+#define DATA_LED_PIN 4
+#define LABEL_LED_PIN 5
+
+CRGB labelArray[NUM_LEDS];
+CRGB dataArray[NUM_LEDS];
 
 // Allow up to 1000 characters for the query
 char query[1000];
@@ -312,8 +325,9 @@ void setup()
         preferences.putString("label", label);
         Serial.print("Set label to: ");
         Serial.println(label);
-        labelArray.clear();
-        displayTextOnPanel((const char*)label, strlen(label), labelArray.Color(red, green, blue), labelArray);
+        // labelArray.clear();
+        // displayTextOnPanel((const char*)label, strlen(label), labelArray.Color(red, green, blue), labelArray);
+        displayTextOnPanel((const char*)label, strlen(label), CRGB(red, green, blue), labelArray);
       }
     }
     request->redirect("/");
@@ -328,13 +342,18 @@ void setup()
   xTaskCreatePinnedToCore(processTask, "ProcessTask", 8192, NULL, 1, NULL, 1);
 
   // Clear the display
+  FastLED.addLeds<LED_TYPE, DATA_LED_PIN, COLOR_ORDER>(dataArray, NUM_LEDS);
+  FastLED.addLeds<LED_TYPE, LABEL_LED_PIN, COLOR_ORDER>(labelArray, NUM_LEDS);
+  // FastLED.clear();
 
-  labelArray.clear();
-  displayTextOnPanel((const char*)label, strlen(label), labelArray.Color(red, green, blue), labelArray);
+  // labelArray.clear();
+  // displayTextOnPanel((const char*)label, strlen(label), labelArray.Color(red, green, blue), labelArray);
+  Serial.println("setting label array");
+  displayTextOnPanel((const char*)label, strlen(label), CRGB(red, green, blue), labelArray);
 
 
-  dataArray.clear();
-  dataArray.show();
+  // dataArray.clear();
+  // dataArray.show();
 
 }
 
@@ -357,11 +376,12 @@ void loop()
   else {
     error[0] = '\0';
   }
-  dataArray.clear();
+  // dataArray.clear();
   double newVal = querySeries.getSample(0)->val;
   char newValStr[20];
   dtostrf(newVal, 0, 2, newValStr);
   Serial.println(newValStr);
-  displayTextOnPanel(newValStr, strlen(newValStr), dataArray.Color(red, green, blue), dataArray);
+  // displayTextOnPanel(newValStr, strlen(newValStr), dataArray.Color(red, green, blue), dataArray);
+  displayTextOnPanel(newValStr, strlen(newValStr), CRGB(red, green, blue), dataArray);
   vTaskDelay(5000);
 }

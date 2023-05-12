@@ -977,7 +977,8 @@ int getCharPixel(char thisChar, int down, int left){
     }
 }
 
-void displayTextOnPanel(const char* strIn, size_t strLen, uint32_t color, Adafruit_NeoPixel& strip){
+//void displayTextOnPanel(const char* strIn, size_t strLen, uint32_t color, Adafruit_NeoPixel& strip){
+void displayTextOnPanel(const char* strIn, size_t strLen, uint32_t color, CRGB* strip){
     int maxWidth = 0;
     int offset = 0;
     for (int i = 0; i < strLen; i++){
@@ -1005,8 +1006,9 @@ void displayTextOnPanel(const char* strIn, size_t strLen, uint32_t color, Adafru
           for(int y=0; y<LEDsH; y++){
             int pixel = getCharPixel(innerThisChar, y, innerCharColOffset);
             int addr = getAddr(x, y);
-            uint32_t showColor = pixel == 1 ? color : strip.Color(0,0,0);
-            strip.setPixelColor(addr, showColor);
+            uint32_t showColor = pixel == 1 ? color : CRGB::Black;
+            // strip.setPixelColor(addr, showColor);
+            strip[addr] = showColor;
           }
           
           innerCharColOffset++;
@@ -1020,6 +1022,8 @@ void displayTextOnPanel(const char* strIn, size_t strLen, uint32_t color, Adafru
             innerCharColOffset = 0;
           }
         }
-        strip.show();
+        // strip.show();
     }
+    Serial.println("calling show");
+    FastLED.show();
 }
